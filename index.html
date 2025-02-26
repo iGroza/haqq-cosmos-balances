@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>HAQQ Balance Checker</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: sans-serif;
+                background: #f9f9f9;
+                color: #333;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+            }
+            h1 {
+                margin: 0;
+                padding: 0;
+            }
+            .header {
+                margin: 30px 0 20px;
+            }
+            .input-group {
+                width: 90%;
+                max-width: 500px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 20px;
+            }
+            #addr {
+                flex: 1;
+                box-sizing: border-box;
+                padding: 14px;
+                font-size: 16px;
+                margin-right: 5px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+            }
+            #btn {
+                border: none;
+                border-radius: 4px;
+                background: #333;
+                color: #fff;
+                cursor: pointer;
+                font-size: 16px;
+                padding: 14px 20px;
+            }
+            #output {
+                width: 95%;
+                max-width: 900px;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+                gap: 20px;
+                margin-bottom: 50px;
+                padding: 0 10px;
+            }
+            .card {
+                position: relative;
+                background: #fff;
+                border-radius: 8px;
+                padding: 16px 20px;
+                box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+                transition: transform 0.2s;
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                cursor: pointer;
+            }
+            .card:hover {
+                transform: translateY(-2px);
+            }
+            .card-header {
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 8px;
+            }
+            .label {
+                font-size: 14px;
+                font-weight: 600;
+                color: #444;
+                line-height: 1.4;
+                margin-right: 8px;
+            }
+            #price {
+                height: 18px;
+                font-size: 18px;
+                font-weight: 100;
+                color: #111;
+                margin-bottom: 20px;
+            }
+            .value {
+                font-size: 20px;
+                font-weight: bold;
+                color: #111;
+                margin-bottom: 6px;
+            }
+            .value_usd {
+                font-size: 15px;
+                font-weight: 400;
+                color: #01b26e;
+                margin-bottom: 6px;
+            }
+            .question-icon {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                opacity: 0.4;
+                pointer-events: none;
+            }
+            .card:hover .question-icon {
+                opacity: 0.7;
+            }
+            .toast {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: #333;
+                color: #fff;
+                padding: 8px 14px;
+                border-radius: 6px;
+                font-size: 14px;
+                display: none;
+                z-index: 9999;
+            }
+            #modal,
+            #loaderOverlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                align-items: center;
+                justify-content: center;
+                z-index: 9998;
+                background: rgba(0, 0, 0, 0.7);
+                backdrop-filter: blur(6px);
+            }
+            .loader-spinner {
+                border: 6px solid #f3f3f3;
+                border-radius: 50%;
+                border-top: 6px solid #333;
+                width: 42px;
+                height: 42px;
+                animation: spin 0.8s linear infinite;
+            }
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+            .modal-content {
+                background: #fff;
+                border-radius: 8px;
+                max-width: 600px;
+                width: 90%;
+                padding: 20px;
+                position: relative;
+                box-sizing: border-box;
+                max-height: 80%;
+                overflow-y: auto;
+            }
+            .modal-close {
+                position: absolute;
+                top: 12px;
+                right: 12px;
+                cursor: pointer;
+                border: none;
+                background: none;
+                font-size: 16px;
+            }
+            .modal-content h2 {
+                margin-top: 0;
+                margin-bottom: 10px;
+                font-size: 20px;
+            }
+            .modal-content p,
+            .modal-content pre,
+            .modal-content code {
+                margin-bottom: 10px;
+                font-size: 14px;
+                line-height: 1.4;
+            }
+            .modal-content pre,
+            .modal-content code {
+                background: #f5f5f5;
+                padding: 8px;
+                border-radius: 4px;
+                display: block;
+                white-space: pre;
+                overflow-x: auto;
+            }
+            .copy-curl-btn {
+                background: #333;
+                color: #fff;
+                border: none;
+                padding: 6px 10px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                margin-top: 6px;
+            }
+            .copy-curl-btn:hover {
+                background: #444;
+            }
+            .github-link {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: #333;
+                color: #fff;
+                padding: 10px 15px;
+                border-radius: 4px;
+                text-decoration: none;
+                font-size: 14px;
+                z-index: 9997;
+            }
+            .github-link:hover {
+                background: #444;
+            }
+        </style>
+    </head>
+    <body>
+        <a
+            href="https://github.com/iGroza/haqq-cosmos-balances"
+            class="github-link"
+            target="_blank"
+            >View on GitHub</a
+        >
+
+        <div class="header">
+            <h1>HAQQ Balance Checker</h1>
+            <img
+                src="https://badges.pufler.dev/visits/iGroza/haqq-cosmos-balances-page"
+            />
+        </div>
+        <div class="input-group">
+            <input
+                id="addr"
+                type="text"
+                placeholder="Enter HAQQ bech32 or eip55 address"
+            />
+            <button id="btn">Check Balance</button>
+        </div>
+        <div id="price"></div>
+
+        <div id="output"></div>
+
+        <div id="toast" class="toast">Copied!</div>
+
+        <!-- Full screen loader overlay -->
+        <div id="loaderOverlay">
+            <div class="loader-spinner"></div>
+        </div>
+
+        <!-- Modal -->
+        <div id="modal">
+            <div class="modal-content">
+                <button class="modal-close" id="modalClose">&times;</button>
+                <div id="modalBody"></div>
+            </div>
+        </div>
+
+        <script>
+            const DECIMALS = 1e18;
+            const ADDR_PATTERN = /^haqq1[0-9a-z]{38,}$/i;
+            const REST_URL = "https://rest.cosmos.haqq.network";
+            let ISLM_PRICE = 0; // usd
+
+            const toastElem = document.getElementById("toast");
+            const loaderOverlay = document.getElementById("loaderOverlay");
+            const modalElem = document.getElementById("modal");
+            const modalBody = document.getElementById("modalBody");
+            const modalClose = document.getElementById("modalClose");
+            const checkBtn = document.getElementById("btn");
+
+            /************************************************
+             *                Util functions                *
+             ************************************************/
+            async function fetchISLMPrice() {
+                const FALCONER_URL = "https://falconer.haqq.sh/islamic/price";
+                const response = await fetch(FALCONER_URL);
+                const data = await response.json();
+                return data.price;
+            }
+
+            function showLoader(show) {
+                loaderOverlay.style.display = show ? "flex" : "none";
+            }
+
+            function showToast(text = "Copied!") {
+                toastElem.innerText = text;
+                toastElem.style.display = "block";
+                setTimeout(() => {
+                    toastElem.style.display = "none";
+                }, 2000);
+            }
+
+            function openModal(html) {
+                modalBody.innerHTML = html;
+                modalElem.style.display = "flex";
+            }
+
+            function closeModal() {
+                modalElem.style.display = "none";
+                modalBody.innerHTML = "";
+            }
+
+            window.addEventListener("click", (e) => {
+                if (e.target === modalElem) {
+                    closeModal();
+                }
+            });
+            modalClose.addEventListener("click", closeModal);
+
+            function makeCurl(endpoints) {
+                return endpoints
+                    .map((e) => `curl -sS ${REST_URL}${e}`)
+                    .join("\n");
+            }
+
+            function toNum(x) {
+                return parseFloat(x) / DECIMALS;
+            }
+            function findISLM(arr) {
+                if (!arr) return 0;
+                const f = arr.find((o) =>
+                    ["ISLM", "aISLM", "aLIQUID6"].includes(o.denom),
+                );
+                return f ? toNum(f.amount) : 0;
+            }
+
+            function getDoc(item) {
+                let { label, tip, endpoints, noCurl, formula } = item;
+                let docHtml = `<h2>${label}</h2><p>${tip}</p>`;
+                if (formula) {
+                    docHtml += `<p><strong>Formula:</strong></p><pre><code>${formula}</code></pre>`;
+                }
+                if (!noCurl && endpoints && endpoints.length > 0) {
+                    let cUrlCmd = makeCurl(endpoints);
+                    docHtml += `
+      <p><strong>API call:</strong></p>
+      <pre><code>${cUrlCmd}</code></pre>
+      <button class="copy-curl-btn" data-curl='${cUrlCmd.replace(/'/g, "&#39;").replace(/"/g, "&quot;")}'>
+        Copy cURL
+      </button>
+    `;
+                }
+                return docHtml;
+            }
+
+            function formatStringNumber(amount) {
+                try {
+                    return (amount || 0).toLocaleString("en-US", {
+                        minimumFractionDigits: 3,
+                        maximumFractionDigits: 3,
+                    });
+                } catch (error) {
+                    return "0";
+                }
+            }
+
+            function formatISLM(amount) {
+                return formatStringNumber(amount) + " ISLM";
+            }
+
+            function toUsd(amount) {
+                return "$" + formatStringNumber(amount * ISLM_PRICE);
+            }
+
+            /************************************************
+             *        Bech32 converter implementation       *
+             ************************************************/
+            function toBech32(eip55_address_string) {
+                // Remove "0x" prefix if present and normalize to lowercase
+                let hex = eip55_address_string.startsWith("0x")
+                    ? eip55_address_string.slice(2)
+                    : eip55_address_string;
+                hex = hex.toLowerCase();
+
+                // Convert hex string to byte array
+                const bytes = [];
+                for (let i = 0; i < hex.length; i += 2) {
+                    bytes.push(parseInt(hex.substr(i, 2), 16));
+                }
+
+                // Convert 8-bit bytes to 5-bit groups
+                const data = convertBits(bytes, 8, 5, true);
+                return bech32Encode("haqq", data);
+            }
+
+            function convertBits(data, fromBits, toBits, pad) {
+                let acc = 0;
+                let bits = 0;
+                const result = [];
+                const maxv = (1 << toBits) - 1;
+                for (let i = 0; i < data.length; i++) {
+                    let value = data[i];
+                    if (value < 0 || value >> fromBits !== 0) {
+                        return null;
+                    }
+                    acc = (acc << fromBits) | value;
+                    bits += fromBits;
+                    while (bits >= toBits) {
+                        bits -= toBits;
+                        result.push((acc >> bits) & maxv);
+                    }
+                }
+                if (pad) {
+                    if (bits > 0) {
+                        result.push((acc << (toBits - bits)) & maxv);
+                    }
+                } else if (
+                    bits >= fromBits ||
+                    (acc << (toBits - bits)) & maxv
+                ) {
+                    return null;
+                }
+                return result;
+            }
+
+            function bech32Encode(hrp, data) {
+                const combined = data.concat(createChecksum(hrp, data));
+                const CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+                let ret = hrp + "1";
+                for (let i = 0; i < combined.length; i++) {
+                    ret += CHARSET.charAt(combined[i]);
+                }
+                return ret;
+            }
+
+            function createChecksum(hrp, data) {
+                const values = hrpExpand(hrp)
+                    .concat(data)
+                    .concat([0, 0, 0, 0, 0, 0]);
+                const mod = polymod(values) ^ 1;
+                const ret = [];
+                for (let i = 0; i < 6; i++) {
+                    ret.push((mod >> (5 * (5 - i))) & 31);
+                }
+                return ret;
+            }
+
+            function hrpExpand(hrp) {
+                const result = [];
+                for (let i = 0; i < hrp.length; i++) {
+                    result.push(hrp.charCodeAt(i) >> 5);
+                }
+                result.push(0);
+                for (let i = 0; i < hrp.length; i++) {
+                    result.push(hrp.charCodeAt(i) & 31);
+                }
+                return result;
+            }
+
+            function polymod(values) {
+                let chk = 1;
+                const GENERATORS = [
+                    0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3,
+                ];
+                for (let i = 0; i < values.length; i++) {
+                    const value = values[i];
+                    const top = chk >> 25;
+                    chk = ((chk & 0x1ffffff) << 5) ^ value;
+                    for (let j = 0; j < 5; j++) {
+                        if ((top >> j) & 1) {
+                            chk ^= GENERATORS[j];
+                        }
+                    }
+                }
+                return chk;
+            }
+
+            /************************************************
+             *             Fetch cosmos balances            *
+             ************************************************/
+            async function checkBalance() {
+                let address = document.getElementById("addr").value.trim();
+                if (address.startsWith("0x")) {
+                    address = toBech32(address);
+                }
+                const output = document.getElementById("output");
+                output.innerHTML = "";
+
+                if (!ADDR_PATTERN.test(address)) {
+                    output.innerHTML =
+                        "<div style='text-align:center;width:100%'>Invalid HAQQ address</div>";
+                    return;
+                }
+
+                showLoader(true);
+
+                try {
+                    const endpoints = [
+                        `/cosmos/bank/v1beta1/balances/${address}`,
+                        `/cosmos/bank/v1beta1/spendable_balances/${address}`,
+                        `/cosmos/staking/v1beta1/delegations/${address}`,
+                        `/cosmos/staking/v1beta1/delegators/${address}/unbonding_delegations`,
+                        `/cosmos/distribution/v1beta1/delegators/${address}/rewards`,
+                        `/haqq/vesting/v1/balances/${address}`,
+                        `/haqq/dao/v1/balances/${address}`,
+                    ];
+                    const [bals, spend, deleg, unb, rew, vest, dao] =
+                        await Promise.all(
+                            endpoints.map((e) =>
+                                fetch(REST_URL + e).then((r) => r.json()),
+                            ),
+                        );
+
+                    let availableForStake = findISLM(bals.balances);
+                    let available = findISLM(spend.balances);
+                    let staked = 0;
+                    if (deleg && deleg.delegation_responses) {
+                        staked = deleg.delegation_responses.reduce(
+                            (acc, c) => acc + toNum(c.balance.amount),
+                            0,
+                        );
+                    }
+                    let unbonding = 0;
+                    if (unb && unb.unbonding_responses) {
+                        unb.unbonding_responses.forEach((u) =>
+                            u.entries.forEach(
+                                (e) => (unbonding += toNum(e.balance)),
+                            ),
+                        );
+                    }
+                    let rewards = 0;
+                    if (rew && rew.total) {
+                        let found = rew.total.find((x) => x.denom === "aISLM");
+                        if (found) rewards = toNum(found.amount);
+                    }
+                    let totalLocked = findISLM(vest.locked);
+
+                    let daoLocked = 0;
+                    if (dao && dao.balances) {
+                        dao.balances.forEach((x) => {
+                            daoLocked += toNum(x.amount);
+                        });
+                    }
+                    let vested = availableForStake - available;
+                    let stakedVested = totalLocked - vested;
+                    let totalStaked = staked + unbonding + rewards;
+                    let stakedFree = totalStaked - stakedVested;
+                    let locked = totalStaked + vested + daoLocked;
+                    let total = availableForStake + totalStaked;
+
+                    const dataItems = [
+                        {
+                            label: "Total",
+                            value: total,
+                            tip: "Total balance including staked tokens.",
+                            endpoints: [],
+                            noCurl: true,
+                            formula:
+                                "total = available_for_stake + total_staked",
+                        },
+                        {
+                            label: "Available for stake",
+                            value: availableForStake,
+                            tip: "This is your total balance from cosmos/bank/v1beta1/balances, which can be used for staking.",
+                            endpoints: [
+                                `/cosmos/bank/v1beta1/balances/${address}`,
+                            ],
+                            noCurl: false,
+                            formula: null,
+                        },
+                        {
+                            label: "Available",
+                            value: available,
+                            tip: "This is the spendable balance from cosmos/bank/v1beta1/spendable_balances. You can send or spend these tokens.",
+                            endpoints: [
+                                `/cosmos/bank/v1beta1/spendable_balances/${address}`,
+                            ],
+                            noCurl: false,
+                            formula: null,
+                        },
+                        {
+                            label: "Staked",
+                            value: staked,
+                            tip: "This is the total amount delegated to validators from cosmos/staking/v1beta1/delegations.",
+                            endpoints: [
+                                `/cosmos/staking/v1beta1/delegations/${address}`,
+                            ],
+                            noCurl: false,
+                            formula: null,
+                        },
+                        {
+                            label: "Unbonding",
+                            value: unbonding,
+                            tip: "These tokens are currently unbonding (cosmos/staking/v1beta1/delegators/ADDRESS/unbonding_delegations).",
+                            endpoints: [
+                                `/cosmos/staking/v1beta1/delegators/${address}/unbonding_delegations`,
+                            ],
+                            noCurl: false,
+                            formula: null,
+                        },
+                        {
+                            label: "Rewards",
+                            value: rewards,
+                            tip: "Unclaimed staking rewards from cosmos/distribution/v1beta1/delegators/ADDRESS/rewards.",
+                            endpoints: [
+                                `/cosmos/distribution/v1beta1/delegators/${address}/rewards`,
+                            ],
+                            noCurl: false,
+                            formula: null,
+                        },
+                        {
+                            label: "Total locked",
+                            value: totalLocked,
+                            tip: "All tokens locked under vesting from haqq/vesting/v1/balances -> locked.",
+                            endpoints: [`/haqq/vesting/v1/balances/${address}`],
+                            noCurl: false,
+                            formula: null,
+                        },
+                        {
+                            label: "Vested",
+                            value: vested,
+                            tip: "Locked tokens that reside on your balance (not spendable).",
+                            endpoints: [],
+                            noCurl: true,
+                            formula: "vested = available_for_stake - available",
+                        },
+                        {
+                            label: "Staked vested",
+                            value: stakedVested,
+                            tip: "Locked tokens currently in staking.",
+                            endpoints: [],
+                            noCurl: true,
+                            formula: "staked_vested = total_locked - vested",
+                        },
+                        {
+                            label: "Total staked",
+                            value: totalStaked,
+                            tip: "All tokens that are in staking/unbonding plus unclaimed rewards.",
+                            endpoints: [],
+                            noCurl: true,
+                            formula:
+                                "total_staked = staked + unbonding + rewards",
+                        },
+                        {
+                            label: "Staked free",
+                            value: stakedFree,
+                            tip: "Staked tokens that are not locked by vesting.",
+                            endpoints: [],
+                            noCurl: true,
+                            formula:
+                                "staked_free = total_staked - staked_vested",
+                        },
+                        {
+                            label: "DAO locked",
+                            value: daoLocked,
+                            tip: "Tokens locked in DAO at a 1:1 ratio. Data from haqq/dao/v1/balances.",
+                            endpoints: [`/haqq/dao/v1/balances/${address}`],
+                            noCurl: false,
+                            formula: null,
+                        },
+                        {
+                            label: "Locked",
+                            value: locked,
+                            tip: "All tokens locked by vesting, staking, or DAO.",
+                            endpoints: [],
+                            noCurl: true,
+                            formula:
+                                "locked = total_staked + vested + DAO_locked",
+                        },
+                    ];
+
+                    // Build the cards
+                    output.innerHTML = dataItems
+                        .map((item, idx) => {
+                            return `
+        <div class="card" data-idx="${idx}">
+          <div class="question-icon">
+            <svg width="14" height="14" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                 viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 8v2"></path>
+              <path d="M12 16h.01"></path>
+            </svg>
+          </div>
+          <div class="card-header">
+            <div class="label">${item.label}</div>
+          </div>
+          <code class="value">${formatISLM(item.value)}</code>
+          ${ISLM_PRICE ? '<code class="value_usd">' + toUsd(item.value) + "</code>" : ""}
+        </div>
+      `;
+                        })
+                        .join("");
+
+                    // handle card clicks
+                    document.querySelectorAll(".card").forEach((card) => {
+                        card.addEventListener("click", (e) => {
+                            let idx = card.getAttribute("data-idx");
+                            idx = parseInt(idx, 10);
+                            const docHtml = getDoc(dataItems[idx]);
+                            openModal(docHtml);
+                        });
+                    });
+                } catch (e) {
+                    output.innerHTML =
+                        "<div style='text-align:center;width:100%'>Error fetching balances</div>";
+                }
+                showLoader(false);
+            }
+
+            // events
+            checkBtn.addEventListener("click", checkBalance);
+
+            // handle copying cURL from modal
+            document.addEventListener("click", (e) => {
+                if (e.target.classList.contains("copy-curl-btn")) {
+                    const code = e.target.getAttribute("data-curl");
+                    navigator.clipboard.writeText(code);
+                    showToast("cURL copied!");
+                }
+            });
+
+            document.addEventListener("DOMContentLoaded", () => {
+                const address = new URL(location.href).searchParams.get(
+                    "address",
+                );
+                const addressInput = document.getElementById("addr");
+                if (address) {
+                    addressInput.value = address;
+                    checkBalance();
+                }
+
+                fetchISLMPrice().then((price) => {
+                    ISLM_PRICE = price;
+
+                    if (address || addressInput.value) {
+                        checkBalance();
+                    }
+
+                    const priceElement = document.getElementById("price");
+                    priceElement.innerHTML = `<div>ISLM Price: <code style="color: #01b26e;">$${ISLM_PRICE}</code></div>`;
+                });
+            });
+        </script>
+    </body>
+</html>
